@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0">
+<title>Picker</title>
+<style>
+body {
+    background:#FFF;
+    color:#000;
+    font-family:verdana, sans-serif;
+    font-size:10pt;
+    margin:0;
+    padding:10px;
+}
+
+a:link, a:visited {
+    color:#008;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+a:active, a:hover {
+    color:#ACF;
+}
+
+.info {
+    font-weight:bold;
+}
+
+button {
+    font-family:inherit;
+    cursor:pointer;
+    border:0;
+    border-radius:3px;
+    padding:0.3em 0.5em;
+    background:#CCC;
+    color:#000;
+}
+
+button:hover {
+    background:#DDD;
+}
+
+button.disabled {
+    background:#DDD;
+    color:#888;
+    cursor:not-allowed;
+}
+
+button.disabled:hover {
+    background:#DDD;
+}
+
+#container {
+    position:relative;
+    margin-left:-10px;
+    margin-right:-10px;
+    padding:10px;
+    overflow:hidden;
+}
+
+@media (min-width:1024px) {
+    /* Put the found favorites beside the picking div when the window is sufficiently large */
+    #picking {
+        float:left;
+        width:636px;
+    }
+
+    #secondary {
+        margin-left:646px;
+    }
+}
+
+@media (min-width:1300px) {
+    /* Once we get to the point where 636px is less than half of the width of the screen, make the picking div just take up half */
+    #picking {
+        width:50%;
+    }
+
+    #secondary {
+        margin-left:51%;
+    }
+}
+
+#pick {
+    background:#58F;
+    color:#FFF;
+    font-size:larger;
+    font-weight:bold;
+    width:6em;
+    border-radius:5px;
+    margin-right:10px;
+}
+
+#pick.disabled {
+    background:#ACF;
+}
+
+#pick:hover {
+    background:#ACF;
+}
+
+.item-list {
+    padding:0;
+    list-style-type:none;
+    line-height:100px;
+}
+
+.item-list li {
+    margin:0;
+    display:inline-block;
+    height:100px;
+    width:100px;
+    line-height:100px;
+    border:3px solid transparent;
+    text-align:center;
+    position:relative;
+    vertical-align:top;
+    overflow:hidden;
+    border-radius:100%;
+    background:#F7F7F7;
+    color:#000;
+}
+
+.item-list li img {
+    vertical-align:middle;
+    max-height:100%;
+    max-width:100%;
+}
+
+.item-list li span {
+    display:inline-block;
+    vertical-align:middle;
+    line-height:1.2;
+}
+
+@media (max-width:636px) {
+    .item-list {
+        line-height:75px;
+    }
+
+    .item-list li {
+        line-height:75px;
+        height:75px;
+        width:75px;
+    }
+}
+
+@media (max-width:423px) {
+    .item-list {
+        line-height:50px;
+    }
+
+    .item-list li {
+        line-height:50px;
+        height:50px;
+        width:50px;
+    }
+}
+
+#evaluating li {
+    cursor:pointer;
+}
+
+#favorites li {
+    cursor:move;
+}
+
+.item-list li:hover {
+    background:#CDF;
+}
+
+.item-list.sorting li:hover {
+    background:#F7F7F7;
+}
+
+#evaluating li.selected {
+    border:3px solid #7AC;
+}
+
+#evaluating, #buttons {
+    text-align:center;
+    margin:auto;
+}
+
+#evaluating li.notice {
+    width:auto;
+    height:auto;
+    max-width:260px;
+    margin:auto;
+    background:#F7F7F7;
+    border-radius:10px;
+    padding:30px 30px;
+    color:#000;
+    text-align:center;
+    line-height:1.4;
+    cursor:auto;
+    font-size:10pt;
+}
+
+#buttons {
+    margin-top:30px;
+    position:relative;
+    z-index:3;
+}
+</style>
+</head>
+<body>
+<h1>Picker</h1>
+
+<p>You can include any content you want here.</p>
+
+<div id="container">
+
+<div id="picking">
+<ul id="evaluating" class="item-list">
+</ul>
+
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+</div>
+
+<div id="secondary">
+<h2>Found favorites</h2>
+
+<ol id="favorites" class="item-list">
+</ol>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="picker.js"></script>
+<script src="picker-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.7.0/Sortable.min.js"></script>
+<script>
+'use strict';
+
+var items = [
+    {id: '01', name: '1. Hat', image: '01.png'},
+    {id: '02', name: '2. Hat', image: '02.png'},
+    {id: '03', name: '3. Hat', image: '03.png'},
+    {id: '04', name: '4. Hat', image: '04.png'},
+    {id: '05', name: '5. Hat', image: '05.png'},
+    {id: '06', name: '6. Hat', image: '06.png'},
+    {id: '07', name: '7. Hat', image: '07.png'},
+    {id: '08', name: '8. Hat', image: '08.png'},
+    {id: '09', name: '9. Hat', image: '09.png'},
+    {id: '10', name: '10. Hat', image: '10.png'},
+    {id: '11', name: '11. Hat', image: '11.png'},
+    {id: '12', name: '12. Hat', image: '12.png'},
+    {id: '13', name: '13. Hat', image: '13.png'},
+    {id: '14', name: '14. Hat', image: '14.png'},
+    {id: '15', name: '15. Hat', image: '15.png'},
+    {id: '16', name: '16. Hat', image: '16.png'},
+    {id: '17', name: '17. Hat', image: '17.png'},
+    {id: '18', name: '18. Hat', image: '18.png'},
+    {id: '19', name: '19. Hat', image: '19.png'},
+    {id: '20', name: '20. Hat', image: '20.png'},
+    {id: '21', name: '21. Women\'s Full Body', image: '21.png'},
+    {id: '22', name: '22. Women\'s Full Body', image: '22.png'},
+    {id: '23', name: '23. Women\'s Full Body', image: '23.png'},
+    {id: '24', name: '24. Women\'s Full Body', image: '24.png'},
+    {id: '25', name: '25. Women\'s Full Body', image: '25.png'},
+    {id: '26', name: '26. Women\'s Top', image: '26.png'},
+    {id: '27', name: '27. Women\'s Top', image: '27.png'},
+    {id: '28', name: '28. Women\'s Top', image: '28.png'},
+    {id: '29', name: '29. Women\'s Top', image: '29.png'},
+    {id: '30', name: '30. Women\'s Top', image: '30.png'},
+    {id: '31', name: '31. Women\'s Top', image: '31.png'},
+    {id: '32', name: '32. Women\'s Top', image: '32.png'},
+    {id: '33', name: '33. Women\'s Top', image: '33.png'},
+    {id: '34', name: '34. Women\'s Top', image: '34.png'},
+    {id: '35', name: '35. Women\'s Shoe', image: '35.png'},
+    {id: '36', name: '36. Women\'s Shoe', image: '36.png'},
+    {id: '37', name: '37. Women\'s Shoe', image: '37.png'},
+    {id: '38', name: '38. Women\'s Shoe', image: '38.png'},
+    {id: '39', name: '39. Women\'s Shoe', image: '39.png'},
+    {id: '40', name: '40. Women\'s Shoe', image: '40.png'},
+    {id: '41', name: '41. Women\'s Shoe', image: '41.png'},
+    {id: '42', name: '42. Women\'s Bottom', image: '42.png'},
+    {id: '43', name: '43. Women\'s Bottom', image: '43.png'},
+    {id: '44', name: '44. Women\'s Bottom', image: '44.png'},
+    {id: '45', name: '45. Women\'s Bottom', image: '45.png'},
+    {id: '46', name: '46. Women\'s Bottom', image: '46.png'},
+    {id: '47', name: '47. Women\'s Bottom', image: '47.png'},
+    {id: '48', name: '48. Women\'s Bottom', image: '48.png'},
+    {id: '49', name: '49. Women\'s Bottom', image: '49.png'},
+    {id: '50', name: '50. Men\'s Top', image: '50.png'},
+    {id: '51', name: '51. Men\'s Top', image: '51.png'},
+    {id: '52', name: '52. Men\'s Top', image: '52.png'},
+    {id: '53', name: '53. Men\'s Top', image: '53.png'},
+    {id: '54', name: '54. Men\'s Top', image: '54.png'},
+    {id: '55', name: '55. Men\'s Top', image: '55.png'},
+    {id: '56', name: '56. Men\'s Top', image: '56.png'},
+    {id: '57', name: '57. Men\'s Top', image: '57.png'},
+    {id: '58', name: '58. Men\'s Top', image: '58.png'},
+    {id: '59', name: '59. Men\'s Bottom', image: '59.png'},
+    {id: '60', name: '60. Men\'s Bottom', image: '60.png'},
+    {id: '61', name: '61. Men\'s Bottom', image: '61.png'},
+    {id: '62', name: '62. Men\'s Bottom', image: '62.png'},
+    {id: '63', name: '63. Men\'s Bottom', image: '63.png'},
+    {id: '64', name: '64. Men\'s Shoe', image: '64.png'},
+    {id: '65', name: '65. Toddler\'s Top', image: '65.png'},
+    {id: '66', name: '66. Toddler\'s Top', image: '66.png'},
+    {id: '67', name: '67. Toddler\'s Full Body', image: '67.png'},
+    {id: '68', name: '68. Toddler\'s Top', image: '68.png'},
+    {id: '69', name: '69. Toddler\'s Full Body', image: '69.png'},
+    {id: '70', name: '70. Toddler\'s Full Body', image: '70.png'},
+    {id: '71', name: '71. Toddler\'s Full Body', image: '71.png'},
+    {id: '72', name: '72. Toddler\'s Top', image: '72.png'},
+    {id: '73', name: '73. Toddler\'s Top', image: '73.png'},
+    {id: '74', name: '74. Toddler\'s Bottom', image: '74.png'},
+    {id: '75', name: '75. Toddler\'s Shoe', image: '75.png'},
+    {id: '76', name: '76. Child\'s Full Body', image: '76.png'},
+    {id: '77', name: '77. Child\'s Full Body', image: '77.png'},
+    {id: '78', name: '78. Child\'s Full Body', image: '78.png'},
+    {id: '79', name: '79. Child\'s Top', image: '79.png'},
+    {id: '80', name: '80. Child\'s Top', image: '80.png'},
+    {id: '81', name: '81. Child\'s Bottom', image: '81.png'},
+    {id: '82', name: '82. Child\'s Shoe', image: '82.png'},
+    {id: '83', name: '83. Child\'s Top', image: '83.png'},
+    {id: '84', name: '84. Child\'s Top', image: '84.png'},
+    {id: '85', name: '85. Child\'s Top', image: '85.png'},
+    {id: '86', name: '86. Child\'s Bottom', image: '86.png'},
+    {id: '87', name: '87. Pet', image: '87.png'},
+    {id: '88', name: '88. Pet', image: '88.png'},
+    {id: '89', name: '89. Pet', image: '89.png'},
+    {id: '90', name: '90. Pet', image: '90.png'},
+    {id: '91', name: '91. Pet', image: '91.png'},
+    {id: '92', name: '92. Child\'s Top', image: '92.png'}
+];
+
+var myPicker = new picker.Picker({
+    items: items
+});
+
+var pickerUI = new PickerUI(myPicker, {
+    elements: {
+        pick: "#pick",
+        pass: "#pass",
+        undo: "#undo",
+        redo: "#redo",
+        evaluating: "#evaluating",
+        favorites: "#favorites"
+    }
+});
+
+pickerUI.initialize();
+
+/* Sortable favorites - you can safely remove this, and the Sortable.min.js script, if you don't want to be able to sort your favorite list. */
+var sortable = new Sortable(pickerUI.elem.favorites.get(0), {
+    draggable: '.item',
+    animation: 100,
+    onStart: function() {
+        pickerUI.elem.favorites.addClass("sorting");
+    },
+    onEnd: function() {
+        pickerUI.elem.favorites.removeClass("sorting");
+    },
+    onUpdate: function() {
+        myPicker.setFavorites(pickerUI.elem.favorites.children().map(function() {
+            return pickerUI.getItem(this);
+        }).get());
+        pickerUI.update(true);
+    }
+});
+/* End sortable favorites */
+</script>
+</body>
+</html>
